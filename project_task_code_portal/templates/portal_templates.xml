@@ -4,7 +4,7 @@
 <odoo>
     <template id="portal_tasks_list_override" inherit_id="project.portal_tasks_list">
         <xpath
-            expr="//td[contains(@class, 'text-start')]/span[@t-esc='task.id']"
+            expr="//td[hasclass('text-start')]/span[@t-esc='task.id']"
             position="attributes"
         >
             <attribute name="t-esc">task.code</attribute>
@@ -18,7 +18,7 @@
 
     <template id="portal_my_task_override" inherit_id="project.portal_my_task">
         <xpath
-            expr="//small[contains(@class, 'text-muted')]/span[@t-field='task.id']"
+            expr="//small[hasclass('text-muted')]/span[@t-field='task.id']"
             position="attributes"
         >
             <attribute name="t-field">task.code</attribute>

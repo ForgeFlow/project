@@ -16,7 +16,7 @@ from odoo.addons.project.tests.test_access_rights import TestProjectPortalCommon
 class TestPortalTaskCode(TestProjectPortalCommon, HttpCaseWithUserPortal):
     @classmethod
     def setUpClass(cls):
-        super(TestPortalTaskCode, cls).setUpClass()
+        super().setUpClass()
         cls.task_1.project_id.privacy_visibility = "portal"
         task_wizard = cls.env["portal.share"].create(
             {
@@ -40,7 +40,7 @@ class TestPortalTaskCode(TestProjectPortalCommon, HttpCaseWithUserPortal):
         content = response.content
         tree = html.fromstring(content)
         spans = tree.xpath(
-            "//td[contains(@class, 'text-start') and contains(., '#')]//span"
+            "//td[contains(@class, 'text-start') and " "contains(., '#')]//span"
         )
         list_tasks_code = [s.text for s in spans]
         self.assertIn(self.task_1.code, list_tasks_code)
@@ -55,7 +55,8 @@ class TestPortalTaskCode(TestProjectPortalCommon, HttpCaseWithUserPortal):
         content = response.content
         tree = html.fromstring(content)
         spans = tree.xpath(
-            "//small[contains(@class, 'text-muted') and contains(@class, 'd-md-inline')]//span"
+            "//small[contains(@class, 'text-muted') and "
+            "contains(@class, 'd-md-inline')]//span"
         )
         list_tasks_code = [s.text for s in spans]
         self.assertIn(self.task_1.code, list_tasks_code)
@@ -98,13 +99,15 @@ class TestPortalTaskCode(TestProjectPortalCommon, HttpCaseWithUserPortal):
         response = self.url_open(self.base_url + self.task_1.code + "?report_type=html")
         if hr_timesheet_installed:
             # If hr_timesheet is installed, expect successful response
-            # _show_task_report is overridden by hr_timesheet to generate timesheet reports
+            # _show_task_report is overridden by hr_timesheet to generate
+            # timesheet reports
             self.assertEqual(response.status_code, 200)
             self.assertIn("text/html", response.headers.get("Content-Type", ""))
         else:
             # If hr_timesheet is not installed, expect error response
             # _show_task_report raises MissingError("There is nothing to report.")
-            # This method is to be overriden to report timesheets if the module is installed
+            # This method is to be overriden to report timesheets if the
+            # module is installed
             self.assertEqual(response.status_code, 400)
             content = response.content
             tree = html.fromstring(content)
@@ -132,10 +135,13 @@ class TestPortalTaskCode(TestProjectPortalCommon, HttpCaseWithUserPortal):
         # Share the project with portal user
         project_share_wizard = self.env["project.share.wizard"].create(
             {
-                "access_mode": "edit",
                 "res_model": "project.project",
                 "res_id": self.task_1.project_id.id,
-                "partner_ids": [Command.link(self.partner_portal.id)],
+                "collaborator_ids": [
+                    Command.create(
+                        {"partner_id": self.partner_portal.id, "access_mode": "edit"}
+                    ),
+                ],
             }
         )
         project_share_wizard.action_send_mail()
@@ -180,7 +186,8 @@ class TestPortalTaskCode(TestProjectPortalCommon, HttpCaseWithUserPortal):
         self.assertEqual(response.status_code, 200)
 
         # Now check if the navigation links for previous/next task are not present
-        # This would indicate that the history was reset to only contain the current task
+        # This would indicate that the history was reset to only contain
+        # the current task
         content = response.content
         tree = html.fromstring(content)
 
@@ -202,7 +209,7 @@ class TestPortalTaskCode(TestProjectPortalCommon, HttpCaseWithUserPortal):
 class TestPortalProjectTaskCode(TestProjectPortalCommon, HttpCaseWithUserPortal):
     @classmethod
     def setUpClass(cls):
-        super(TestPortalProjectTaskCode, cls).setUpClass()
+        super().setUpClass()
         cls.project_pigs.privacy_visibility = "portal"
         task_wizard = cls.env["portal.share"].create(
             {
@@ -223,9 +230,28 @@ class TestPortalProjectTaskCode(TestProjectPortalCommon, HttpCaseWithUserPortal)
         # Force activation because some modules might disable this rule
         cls.env.ref("project.project_task_rule_portal").write({"active": True})
 
+    def _project_share(self, access_mode="edit"):
+        # Share the project with portal user
+        project_share_wizard = self.env["project.share.wizard"].create(
+            {
+                "res_model": "project.project",
+                "res_id": self.task_1.project_id.id,
+                "collaborator_ids": [
+                    Command.create(
+                        {
+                            "partner_id": self.partner_portal.id,
+                            "access_mode": access_mode,
+                        }
+                    ),
+                ],
+            }
+        )
+        project_share_wizard.action_send_mail()
+
     def test_portal_project_tasks_list_access(self):
+        self._project_share(access_mode="read")
         self.authenticate("portal", "portal")
-        project_id = self.task_1.project_id.id
+        project_id = self.task_3.project_id.id
         url = f"{self.base_projects_url}/{project_id}"
         response = self.url_open(url)
         content = response.content
@@ -234,14 +260,15 @@ class TestPortalProjectTaskCode(TestProjectPortalCommon, HttpCaseWithUserPortal)
             "//td[contains(@class, 'text-start') and contains(., '#')]//span"
         )
         list_tasks_code = [s.text for s in spans]
-        self.assertIn(self.task_1.code, list_tasks_code)
-        link = tree.xpath(f"//td[a/span[contains(text(), '{self.task_1.name}')]]//a")[
+        self.assertIn(self.task_3.code, list_tasks_code)
+        link = tree.xpath(f"//td[a/span[contains(text(), '{self.task_3.name}')]]//a")[
             0
         ].attrib["href"]
-        expected_link = f"/my/projects/{project_id}/task/{self.task_1.code}?"
+        expected_link = f"/my/projects/{project_id}/task/{self.task_3.code}?"
         self.assertEqual(link, expected_link)
 
     def test_portal_my_project_task_ok(self):
+        self._project_share(access_mode="edit")
         self.authenticate("portal", "portal")
         project_id = self.task_1.project_id.id
         task_code = self.task_1.code
@@ -250,12 +277,14 @@ class TestPortalProjectTaskCode(TestProjectPortalCommon, HttpCaseWithUserPortal)
         content = response.content
         tree = html.fromstring(content)
         spans = tree.xpath(
-            "//small[contains(@class, 'text-muted') and contains(@class, 'd-md-inline')]//span"
+            "//small[contains(@class, 'text-muted') and "
+            "contains(@class, 'd-md-inline')]//span"
         )
         list_tasks_code = [s.text for s in spans]
         self.assertIn(self.task_1.code, list_tasks_code)
 
     def test_portal_my_project_task_not_found(self):
+        self._project_share(access_mode="edit")
         self.authenticate("portal", "portal")
         project_id = self.task_1.project_id.id
         url = f"{self.base_projects_url}/{project_id}/task/NotExistentCode"
@@ -263,6 +292,7 @@ class TestPortalProjectTaskCode(TestProjectPortalCommon, HttpCaseWithUserPortal)
         self.assertEqual(response.url, self.base_my_url)
 
     def test_portal_my_project_task_no_access(self):
+        self._project_share(access_mode="edit")
         other_project = self.env["project.project"].create(
             {
                 "name": "Closed project",

@@ -9,14 +9,16 @@ from odoo.addons.project.controllers.portal import ProjectCustomerPortal
 
 
 class PortalProjectTask(ProjectCustomerPortal):
-    def _task_get_searchbar_inputs(self, milestones_allowed):
-        inputs = super()._task_get_searchbar_inputs(milestones_allowed)
+    def _task_get_searchbar_inputs(self, milestones_allowed, project=False):
+        inputs = super()._task_get_searchbar_inputs(milestones_allowed, project=project)
         if "ref" in inputs and "label" in inputs["ref"]:
             inputs["ref"]["label"] = _("Search in Task code")
         return inputs
 
-    def _task_get_search_domain(self, search_in, search):
-        domain = super()._task_get_search_domain(search_in, search)
+    def _task_get_search_domain(self, search_in, search, milestones_allowed, project):
+        domain = super()._task_get_search_domain(
+            search_in, search, milestones_allowed, project
+        )
         if search_in in ("ref", "all"):
             for i, item in enumerate(domain):
                 if isinstance(item, tuple) and item[0] == "id":
@@ -45,7 +47,7 @@ class PortalProjectTask(ProjectCustomerPortal):
         report_type=None,
         access_token=None,
         project_sharing=False,
-        **kw
+        **kw,
     ):
         try:
             task_sudo = self.get_accessible_task_by_code(task_code, access_token)
@@ -60,8 +62,8 @@ class PortalProjectTask(ProjectCustomerPortal):
         # ensure attachment are accessible with access token inside template
         task_sudo.attachment_ids.generate_access_token()
         if project_sharing is True:
-            # Then the user arrives to the stat button shown in form view of project.task
-            # and the portal user can see only 1 task
+            # Then the user arrives to the stat button shown in form view of
+            # project.task and the portal user can see only 1 task
             # so the history should be reset.
             request.session["my_tasks_history"] = task_sudo.ids
         values = self._task_get_page_view_values(task_sudo, access_token, **kw)
