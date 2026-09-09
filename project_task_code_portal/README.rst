@@ -21,24 +21,24 @@ Project Task Code Portal
     :target: http://www.gnu.org/licenses/agpl-3.0-standalone.html
     :alt: License: AGPL-3
 .. |badge3| image:: https://img.shields.io/badge/github-OCA%2Fproject-lightgray.png?logo=github
-    :target: https://github.com/OCA/project/tree/18.0/project_task_code_portal
+    :target: https://github.com/OCA/project/tree/19.0/project_task_code_portal
     :alt: OCA/project
 .. |badge4| image:: https://img.shields.io/badge/weblate-Translate%20me-F47D42.png
-    :target: https://translation.odoo-community.org/projects/project-18-0/project-18-0-project_task_code_portal
+    :target: https://translation.odoo-community.org/projects/project-19-0/project-19-0-project_task_code_portal
     :alt: Translate me on Weblate
 .. |badge5| image:: https://img.shields.io/badge/runboat-Try%20me-875A7B.png
-    :target: https://runboat.odoo-community.org/builds?repo=OCA/project&target_branch=18.0
+    :target: https://runboat.odoo-community.org/builds?repo=OCA/project&target_branch=19.0
     :alt: Try me on Runboat
 
 |badge1| |badge2| |badge3| |badge4| |badge5|
 
 This module implements task codes in the portal. It allows users to:
 
-- Use task codes instead of IDs in portal URLs.
-- Search for tasks by their unique code.
-- Display task codes in portal task views.
-- Display in the task the URL to access to the task from the portal for
-  easy sharing.
+-  Use task codes instead of IDs in portal URLs.
+-  Search for tasks by their unique code.
+-  Display task codes in portal task views.
+-  Display in the task the URL to access to the task from the portal for
+   easy sharing.
 
 **Table of contents**
 
@@ -60,15 +60,16 @@ Approach
 
 This module extends the standard project portal by allowing:
 
-- Searching for tasks by their unique code.
-- Displaying the task code in both list and detail views.
-- Generating reports that include the task code.
+-  Searching for tasks by their unique code.
+-  Displaying the task code in both list and detail views.
+-  Generating reports that include the task code.
 
 Use Cases
 ---------
 
-- Clients can directly access a task via a URL containing the task code.
-- Support teams can quickly locate a task using its unique identifier.
+-  Clients can directly access a task via a URL containing the task
+   code.
+-  Support teams can quickly locate a task using its unique identifier.
 
 Configuration
 =============
@@ -81,14 +82,14 @@ Usage
 This module will replace the "ID" field with the "Code" in the following
 portal views:
 
-- Task list (including the project task list)
-- Task page
-- Task search
+-  Task list (including the project task list)
+-  Task page
+-  Task search
 
 It will modify the portal URLs as follows:
 
-- **Before:** ``https://example.com/my/tasks/<task_id>``
-- **After:** ``https://example.com/my/tasks/<task_code>``
+-  **Before:** ``https://example.com/my/tasks/<task_id>``
+-  **After:** ``https://example.com/my/tasks/<task_code>``
 
 Changelog
 =========
@@ -101,7 +102,7 @@ Bug Tracker
 Bugs are tracked on `GitHub Issues <https://github.com/OCA/project/issues>`_.
 In case of trouble, please check there if your issue has already been reported.
 If you spotted it first, help us to smash it by providing a detailed and welcomed
-`feedback <https://github.com/OCA/project/issues/new?body=module:%20project_task_code_portal%0Aversion:%2018.0%0A%0A**Steps%20to%20reproduce**%0A-%20...%0A%0A**Current%20behavior**%0A%0A**Expected%20behavior**>`_.
+`feedback <https://github.com/OCA/project/issues/new?body=module:%20project_task_code_portal%0Aversion:%2019.0%0A%0A**Steps%20to%20reproduce**%0A-%20...%0A%0A**Current%20behavior**%0A%0A**Expected%20behavior**>`_.
 
 Do not contact contributors directly about support or help with technical issues.
 
@@ -116,10 +117,10 @@ Authors
 Contributors
 ------------
 
-- `Cetmix <https://cetmix.com/>`__:
+-  `Cetmix <https://cetmix.com/>`__:
 
-  - Ivan Sokolov
-  - Anatol Mikheev
+   -  Ivan Sokolov
+   -  Anatol Mikheev
 
 Maintainers
 -----------
@@ -134,6 +135,6 @@ OCA, or the Odoo Community Association, is a nonprofit organization whose
 mission is to support the collaborative development of Odoo features and
 promote its widespread use.
 
-This module is part of the `OCA/project <https://github.com/OCA/project/tree/18.0/project_task_code_portal>`_ project on GitHub.
+This module is part of the `OCA/project <https://github.com/OCA/project/tree/19.0/project_task_code_portal>`_ project on GitHub.
 
 You are welcome to contribute. To learn how please visit https://odoo-community.org/page/Contribute.

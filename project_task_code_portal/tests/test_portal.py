@@ -31,8 +31,10 @@ class TestPortalTaskCode(TestProjectPortalCommon, HttpCaseWithUserPortal):
 
         cls.host = "127.0.0.1"
         cls.port = tools.config["http_port"]
-        cls.base_url = "http://%s:%d/my/tasks/" % (cls.host, cls.port)
-        cls.url_task_code_pattern = "/my/tasks/{}?"
+        cls.base_url = f"http://{cls.host}:{cls.port}/my/tasks/"  # noqa: E231
+        # The trailing "?" of the portal links is dropped when `website` is
+        # installed, as qweb then post-processes the `href` attributes.
+        cls.url_task_code_pattern = "/my/tasks/{}"
 
     def test_portal_tasks_list_access(self):
         self.authenticate("portal", "portal")
@@ -40,14 +42,16 @@ class TestPortalTaskCode(TestProjectPortalCommon, HttpCaseWithUserPortal):
         content = response.content
         tree = html.fromstring(content)
         spans = tree.xpath(
-            "//td[contains(@class, 'text-start') and " "contains(., '#')]//span"
+            "//td[contains(@class, 'text-start') and contains(., '#')]//span"
         )
         list_tasks_code = [s.text for s in spans]
         self.assertIn(self.task_1.code, list_tasks_code)
         link = tree.xpath(f"//td[a/span[contains(text(), '{self.task_1.name}')]]//a")[
             0
         ].attrib["href"]
-        self.assertEqual(link, self.url_task_code_pattern.format(self.task_1.code))
+        self.assertEqual(
+            link.rstrip("?"), self.url_task_code_pattern.format(self.task_1.code)
+        )
 
     def test_portal_task_access(self):
         self.authenticate("portal", "portal")
@@ -64,13 +68,13 @@ class TestPortalTaskCode(TestProjectPortalCommon, HttpCaseWithUserPortal):
     def test_portal_task_not_found(self):
         self.authenticate("portal", "portal")
         response = self.url_open(self.base_url + "NoCode")
-        home_url = "http://%s:%d/my" % (self.host, self.port)
+        home_url = f"http://{self.host}:{self.port}/my"  # noqa: E231
         self.assertEqual(response.url, home_url)
 
     def test_portal_task_search_link_format(self):
         self.authenticate("portal", "portal")
         task_code = self.task_1.code
-        query_params = f"?search_in=ref&search={task_code}"
+        query_params = f"?search_in=code&search={task_code}"
         response = self.url_open(self.base_url[:-1] + query_params)
         content = response.content
         tree = html.fromstring(content)
@@ -84,7 +88,7 @@ class TestPortalTaskCode(TestProjectPortalCommon, HttpCaseWithUserPortal):
         ].attrib["href"]
         self.assertEqual(
             link,
-            self.url_task_code_pattern.format(self.task_1.code)[:-1] + query_params,
+            self.url_task_code_pattern.format(self.task_1.code) + query_params,
         )
 
     def test_portal_task_report(self):
@@ -108,16 +112,11 @@ class TestPortalTaskCode(TestProjectPortalCommon, HttpCaseWithUserPortal):
             # _show_task_report raises MissingError("There is nothing to report.")
             # This method is to be overriden to report timesheets if the
             # module is installed
-            self.assertEqual(response.status_code, 400)
+            self.assertEqual(response.status_code, 404)
             content = response.content
             tree = html.fromstring(content)
-            error_elements = tree.xpath(
-                "//pre[contains(text(), 'There is nothing to report.')]"
-            )
-            self.assertTrue(
-                error_elements,
-                "Error message 'There is nothing to report.' not found in response",
-            )
+            error_elements = tree.xpath("//h1[contains(text(), 'Error 404')]")
+            self.assertTrue(error_elements, "The 404 page was not rendered")
 
     def test_portal_task_project_sharing(self):
         """Test project sharing functionality."""
@@ -250,6 +249,7 @@ class TestPortalProjectTaskCode(TestProjectPortalCommon, HttpCaseWithUserPortal)
 
     def test_portal_project_tasks_list_access(self):
         self._project_share(access_mode="read")
+        self.task_3.message_subscribe(partner_ids=self.partner_portal.ids)
         self.authenticate("portal", "portal")
         project_id = self.task_3.project_id.id
         url = f"{self.base_projects_url}/{project_id}"
@@ -264,8 +264,8 @@ class TestPortalProjectTaskCode(TestProjectPortalCommon, HttpCaseWithUserPortal)
         link = tree.xpath(f"//td[a/span[contains(text(), '{self.task_3.name}')]]//a")[
             0
         ].attrib["href"]
-        expected_link = f"/my/projects/{project_id}/task/{self.task_3.code}?"
-        self.assertEqual(link, expected_link)
+        expected_link = f"/my/projects/{project_id}/task/{self.task_3.code}"
+        self.assertEqual(link.rstrip("?"), expected_link)
 
     def test_portal_my_project_task_ok(self):
         self._project_share(access_mode="edit")

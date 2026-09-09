@@ -1,8 +1,9 @@
 # Copyright (C) 2025 Cetmix OÜ
 # License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl).
 
-from odoo import _, http
+from odoo import http
 from odoo.exceptions import AccessError, MissingError
+from odoo.fields import Domain
 from odoo.http import request
 
 from odoo.addons.project.controllers.portal import ProjectCustomerPortal
@@ -10,21 +11,32 @@ from odoo.addons.project.controllers.portal import ProjectCustomerPortal
 
 class PortalProjectTask(ProjectCustomerPortal):
     def _task_get_searchbar_inputs(self, milestones_allowed, project=False):
+        """Offer the task code as a search criteria of its own.
+
+        The standard portal searchbar only searches the technical task id,
+        which is never shown to the portal user.
+        """
         inputs = super()._task_get_searchbar_inputs(milestones_allowed, project=project)
-        if "ref" in inputs and "label" in inputs["ref"]:
-            inputs["ref"]["label"] = _("Search in Task code")
+        inputs["code"] = {
+            "input": "code",
+            "label": request.env._("Search in Task code"),
+            "sequence": 90,
+        }
         return inputs
 
     def _task_get_search_domain(self, search_in, search, milestones_allowed, project):
         domain = super()._task_get_search_domain(
             search_in, search, milestones_allowed, project
         )
-        if search_in in ("ref", "all"):
-            for i, item in enumerate(domain):
-                if isinstance(item, tuple) and item[0] == "id":
-                    domain[i] = ("code", item[1], item[2])
-                    break
-        return domain
+        # The default search matches the technical task id. As the task code is
+        # what is displayed to the portal user, search on the code instead.
+        return Domain(domain).map_conditions(
+            lambda condition: (
+                Domain("code", condition.operator, condition.value)
+                if condition.field_expr == "id"
+                else condition
+            )
+        )
 
     def get_accessible_task_by_code(self, task_code, access_token):
         task_id = (
@@ -34,7 +46,7 @@ class PortalProjectTask(ProjectCustomerPortal):
             .id
         )
         if not task_id:
-            raise MissingError(_("No task with this code."))
+            raise MissingError(request.env._("No task with this code."))
         task_sudo = self._document_check_access("project.task", task_id, access_token)
         return task_sudo
 
