@@ -3,18 +3,22 @@
 # Copyright 2024 Tecnativa - Víctor Martínez
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 
-from odoo import exceptions, fields
+from odoo import Command, exceptions, fields
 
 from odoo.addons.base.tests.common import BaseCommon
 
 
 class TestProjectTimeline(BaseCommon):
+    _test_user_groups = ("base.group_user", "project.group_project_user")
+
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
         # Crear proyecto y etapa por objeto, no por referencia XML
         cls.project = cls.env["project.project"].create({"name": "Test"})
-        cls.stage = cls.env["project.task.type"].create({"name": "Stage Test"})
+        cls.stage = cls.env["project.task.type"].create(
+            {"name": "Stage Test", "project_ids": [Command.link(cls.project.id)]}
+        )
         cls.stage.write({"fold": True})
         cls.task = cls.env["project.task"].create(
             {"name": "test", "user_ids": False, "project_id": cls.project.id}
