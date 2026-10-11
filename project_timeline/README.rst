@@ -33,8 +33,9 @@ Project timeline
 |badge1| |badge2| |badge3| |badge4| |badge5|
 
 This module extends the standard tasks and projects actions to add the
-timeline view to them, and also adds the needed fields in the view for
-handling them.
+timeline view to them. The tasks are drawn from their planned start and
+end dates (module ``project_task_planned_date``), which the timeline
+fills from the assignation and the done dates when they are empty.
 
 **Table of contents**
 
@@ -50,12 +51,27 @@ To view the timeline:
 - Click on the timeline view icon.
 - You will see the tasks or projects in the new view.
 
-The Task timeline uses the "Planned Start Date" and "Planned End Date"
-fields, in the "Extra Info" tab (only visible in debug mode).
+The Task timeline uses the planned start and end dates of the tasks,
+added by the module *Project Task Planned Dates*
+(``project_task_planned_date``): *Planned Dates* in the task form.
 
 When a user is assigned, and there's no planned start date, current
 datetime is filled there, and the same happens for the end one when the
 task is put in a done stage.
+
+Changelog
+=========
+
+20.0.1.1.0
+----------
+
+The planned start and end dates of the tasks, their constraint and their
+fields in the task form and list now come from the module
+``project_task_planned_date``, so that other planning modules share
+them. The timeline keeps filling them from the assignation and the done
+dates; a task with a planned start and an allocated time but no done
+date also gets the default end of ``project_task_planned_date``.
+Existing values are kept on update.
 
 Bug Tracker
 ===========

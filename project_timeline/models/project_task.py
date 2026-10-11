@@ -4,21 +4,16 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 from odoo import api, fields, models
-from odoo.exceptions import ValidationError
-from odoo.tools.sql import column_exists, create_column
 
 
 class ProjectTask(models.Model):
     _inherit = "project.task"
 
+    # The fields, their constraint and their UI come from
+    # project_task_planned_date; the timeline fills them from the assignation
+    # and the done dates.
     planned_date_start = fields.Datetime(
         compute="_compute_planned_date_start",
-        store=True,
-        readonly=False,
-        precompute=True,
-    )
-    planned_date_end = fields.Datetime(
-        compute="_compute_planned_date_end",
         store=True,
         readonly=False,
         precompute=True,
@@ -41,7 +36,8 @@ class ProjectTask(models.Model):
     @api.depends("date_end")
     def _compute_planned_date_end(self):
         """Put the done date as the planned end if not other value is previously set,
-        avoiding to trigger the constraint.
+        avoiding to trigger the constraint. Without a done date, the default end
+        of project_task_planned_date applies (planned start plus allocated time).
         """
         for record in self.filtered(lambda x: not x.planned_date_end and x.date_end):
             if (
@@ -49,42 +45,4 @@ class ProjectTask(models.Model):
                 or record.planned_date_start <= record.date_end
             ):
                 record.planned_date_end = record.date_end
-
-    @api.constrains("planned_date_start", "planned_date_end")
-    def _check_planned_dates(self):
-        for task in self:
-            if (
-                task.planned_date_start
-                and task.planned_date_end
-                and task.planned_date_end < task.planned_date_start
-            ):
-                raise ValidationError(
-                    self.env._("The end date must be after the start date.")
-                )
-
-    def _auto_init(self):
-        # Pre-create and fill planned_date_start and planned_date_end columns for
-        # avoiding a costly computation and possible conflicts with the constraint
-        cr = self.env.cr
-        if not column_exists(cr, "project_task", "planned_date_start"):
-            create_column(cr, "project_task", "planned_date_start", "timestamp")
-            cr.execute(
-                """
-                UPDATE project_task
-                SET planned_date_start = date_assign
-                WHERE planned_date_start IS NULL
-                AND date_assign IS NOT NULL
-                """
-            )
-        if not column_exists(cr, "project_task", "planned_date_end"):
-            create_column(cr, "project_task", "planned_date_end", "timestamp")
-            cr.execute(
-                """
-                UPDATE project_task
-                SET planned_date_end = date_end
-                WHERE planned_date_end IS NULL
-                AND date_end IS NOT NULL
-                AND COALESCE(planned_date_start, date_end) <= date_end
-                """
-            )
-        return super()._auto_init()
+        return super()._compute_planned_date_end()
