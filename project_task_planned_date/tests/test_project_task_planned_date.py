@@ -96,7 +96,9 @@ class TestProjectTaskPlannedDate(BaseCommon):
     def test_copy_does_not_keep_dates(self):
         start, end = dt("2026-10-05 08:00:00"), dt("2026-10-05 09:00:00")
         task = self._task(date_planned_start=start, date_planned_end=end)
-        copy = task.copy()
+        # as the superuser: other installed modules may copy records the
+        # test user cannot read (this test is about the dates only)
+        copy = task.sudo().copy()
         # Other modules may fill the dates of the copy (e.g. from its
         # assignation), never with the dates of the original
         self.assertNotEqual(copy.date_planned_start, start)
