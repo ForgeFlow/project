@@ -94,13 +94,13 @@ class TestProjectTaskPlannedDate(BaseCommon):
             task.date_planned_end = dt("2026-10-04 08:00:00")
 
     def test_copy_does_not_keep_dates(self):
-        task = self._task(
-            date_planned_start=dt("2026-10-05 08:00:00"),
-            date_planned_end=dt("2026-10-05 09:00:00"),
-        )
+        start, end = dt("2026-10-05 08:00:00"), dt("2026-10-05 09:00:00")
+        task = self._task(date_planned_start=start, date_planned_end=end)
         copy = task.copy()
-        self.assertFalse(copy.date_planned_start)
-        self.assertFalse(copy.date_planned_end)
+        # Other modules may fill the dates of the copy (e.g. from its
+        # assignation), never with the dates of the original
+        self.assertNotEqual(copy.date_planned_start, start)
+        self.assertNotEqual(copy.date_planned_end, end)
 
     def test_feed_context(self):
         task = self._task()
