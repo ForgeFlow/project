@@ -1,0 +1,1 @@
+odoo-addon-project_task_planned_date @ git+https://github.com/ForgeFlow/project.git@20.0-add-project_task_planned_date#subdirectory=project_task_planned_date

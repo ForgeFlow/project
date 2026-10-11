@@ -8,11 +8,11 @@ from odoo.tools import SQL
 class ReportProjectTaskUser(models.Model):
     _inherit = "report.project.task.user"
 
-    planned_date_start = fields.Datetime(readonly=True)
-    planned_date_end = fields.Datetime(readonly=True)
+    date_planned_start = fields.Datetime(readonly=True)
+    date_planned_end = fields.Datetime(readonly=True)
 
     def _select(self):
-        return SQL("%s, t.planned_date_start, t.planned_date_end", super()._select())
+        return SQL("%s, t.date_planned_start, t.date_planned_end", super()._select())
 
     def _group_by(self):
-        return SQL("%s, t.planned_date_start, t.planned_date_end", super()._group_by())
+        return SQL("%s, t.date_planned_start, t.date_planned_end", super()._group_by())

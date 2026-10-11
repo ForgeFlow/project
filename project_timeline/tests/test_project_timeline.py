@@ -25,48 +25,48 @@ class TestProjectTimeline(BaseCommon):
         )
 
     def test_01_flow_filling(self):
-        self.assertFalse(self.task.planned_date_start)
+        self.assertFalse(self.task.date_planned_start)
         self.task.user_ids = self.env.user
-        self.assertTrue(self.task.planned_date_start)
-        self.assertFalse(self.task.planned_date_end)
+        self.assertTrue(self.task.date_planned_start)
+        self.assertFalse(self.task.date_planned_end)
         self.task.write(
             {
                 "stage_id": self.stage.id,
-                "date_end": fields.Datetime.add(self.task.planned_date_start, days=1),
+                "date_end": fields.Datetime.add(self.task.date_planned_start, days=1),
             }
         )
-        self.assertTrue(self.task.planned_date_end)
+        self.assertTrue(self.task.date_planned_end)
 
     def test_02_no_filling(self):
         task = self.env["project.task"].create(
             {
                 "name": "1",
-                "planned_date_start": "2018-05-01 00:00:00",
-                "planned_date_end": "2018-05-07 00:00:00",
+                "date_planned_start": "2018-05-01 00:00:00",
+                "date_planned_end": "2018-05-07 00:00:00",
                 "project_id": self.project.id,
             }
         )
         task.user_ids = self.env.user
         self.assertEqual(
-            task.planned_date_start, fields.Datetime.from_string("2018-05-01")
+            task.date_planned_start, fields.Datetime.from_string("2018-05-01")
         )
         task.stage_id = self.stage
         self.assertEqual(
-            task.planned_date_end, fields.Datetime.from_string("2018-05-07")
+            task.date_planned_end, fields.Datetime.from_string("2018-05-07")
         )
 
     def test_misc_dates(self):
-        self.assertFalse(self.task.planned_date_start)
+        self.assertFalse(self.task.date_planned_start)
         self.assertFalse(self.task.date_end)
 
     def test_valid_dates(self):
-        self.task.planned_date_start = fields.Datetime.today()
-        self.task.date_end = fields.Datetime.add(self.task.planned_date_start, days=1)
-        self.assertGreater(self.task.date_end, self.task.planned_date_start)
+        self.task.date_planned_start = fields.Datetime.today()
+        self.task.date_end = fields.Datetime.add(self.task.date_planned_start, days=1)
+        self.assertGreater(self.task.date_end, self.task.date_planned_start)
 
     def test_invalid_dates(self):
         self.task.write({"user_ids": self.env.user.ids})
         with self.assertRaises(exceptions.ValidationError):
-            self.task.planned_date_end = fields.Datetime.subtract(
-                self.task.planned_date_start, days=1
+            self.task.date_planned_end = fields.Datetime.subtract(
+                self.task.date_planned_start, days=1
             )
