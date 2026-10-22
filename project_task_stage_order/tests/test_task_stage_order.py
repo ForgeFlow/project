@@ -2,6 +2,7 @@
 # License AGPL-3 - See http://www.gnu.org/licenses/agpl-3.0.html
 
 from odoo.exceptions import UserError
+from odoo.tests import new_test_user
 from odoo.tests.common import tagged
 
 from .common import TestTaskStageOrderCommon
@@ -216,3 +217,14 @@ class TestTaskStageOrder(TestTaskStageOrderCommon):
         )
         self.stage_new.active = False
         self.assertFalse(self._sequence_for(self.project_a, self.stage_new))
+
+    def test_read_group_stage_ids_works_for_portal_user(self):
+        portal_user = new_test_user(
+            self.env, login="portal_user_test", groups="base.group_portal"
+        )
+        result = (
+            self.Task.with_user(portal_user)
+            .with_context(default_project_id=self.project_a.id)
+            ._read_group_stage_ids(self.stage_new | self.stage_done, [])
+        )
+        self.assertTrue(result)
