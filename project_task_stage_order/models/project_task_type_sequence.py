@@ -1,7 +1,7 @@
 # Copyright 2026 ForgeFlow S.L.
 # License AGPL-3 - See http://www.gnu.org/licenses/agpl-3.0.html
 
-from odoo import _, api, fields, models
+from odoo import api, fields, models
 from odoo.exceptions import UserError
 
 
@@ -13,13 +13,11 @@ class ProjectTaskTypeSequence(models.Model):
     project_id = fields.Many2one("project.project", required=True, ondelete="cascade")
     stage_id = fields.Many2one("project.task.type", required=True, ondelete="cascade")
     sequence = fields.Integer(default=10)
-    _sql_constraints = [
-        (
-            "project_stage_unique",
-            "unique(project_id, stage_id)",
-            "A project can only have one order entry per stage.",
-        ),
-    ]
+
+    _project_stage_unique = models.Constraint(
+        "unique(project_id, stage_id)",
+        "A project can only have one order entry per stage.",
+    )
 
     @api.model_create_multi
     def create(self, values_list):
@@ -29,13 +27,15 @@ class ProjectTaskTypeSequence(models.Model):
                 row.stage_id.project_ids += row.project_id
         return rows
 
-    def unlink(self):
+    @api.ondelete(at_uninstall=False)
+    def _unlink_except_stage_with_tasks(self):
         if self.env.context.get("force_delete"):
-            return super().unlink()
-        project_ids = self.project_id.ids
-        stage_ids = self.stage_id.ids
+            return
         task_counts = self.env["project.task"]._read_group(
-            [("project_id", "in", project_ids), ("stage_id", "in", stage_ids)],
+            [
+                ("project_id", "in", self.project_id.ids),
+                ("stage_id", "in", self.stage_id.ids),
+            ],
             ["project_id", "stage_id"],
             ["__count"],
         )
@@ -46,7 +46,7 @@ class ProjectTaskTypeSequence(models.Model):
             count = counts_by_pair.get((row.project_id.id, row.stage_id.id), 0)
             if count:
                 raise UserError(
-                    _(
+                    self.env._(
                         'You cannot remove stage "%(stage)s" from project '
                         '"%(project)s" because it still has %(count)s task(s). '
                         "Please move or delete those tasks first.",
@@ -55,6 +55,10 @@ class ProjectTaskTypeSequence(models.Model):
                         count=count,
                     )
                 )
+
+    def unlink(self):
+        if self.env.context.get("force_delete"):
+            return super().unlink()
         projects_by_stage = {}
         for row in self:
             projects_by_stage.setdefault(row.stage_id, self.env["project.project"])
